@@ -121,8 +121,8 @@ async def set_channel(interaction: discord.Interaction, channel: discord.VoiceCh
 
 # ゲーム募集イベントを作成するスラッシュコマンド
 @client.tree.command(name="create_event", description="ゲーム募集イベントを作成します。")
-@app_commands.describe(number_of_players="募集人数 (デフォルト: 4)", start_time="開始時間 (hh:mm形式、例: 21:00)")
-async def create_event(interaction: discord.Interaction, number_of_players: int = 4, start_time: str = "21:00"):
+@app_commands.describe(number_of_players="募集人数 (デフォルト: 4)", start_time="開始時間 (hh:mm形式、例: 21:00)", game_name="募集するゲーム名 (デフォルト: VALORANT)")
+async def create_event(interaction: discord.Interaction, number_of_players: int = 4, start_time: str = "21:00", game_name: str = "VALORANT"):
     # 開始時間を検証
     try:
         start_time_obj = datetime.strptime(start_time, "%H:%M")
@@ -159,7 +159,7 @@ async def create_event(interaction: discord.Interaction, number_of_players: int 
         return
 
     # イベントを作成
-    event_name = f"ゲーム募集 @{number_of_players}"
+    event_name = f"{game_name}募集 @{number_of_players}"
     description = f"開始時間: {start_time}"
     event = await interaction.guild.create_scheduled_event(
         name=event_name,

@@ -33,10 +33,16 @@ CREATE TABLE IF NOT EXISTS event_channels (
 conn.commit()
 
 # イベントとチャンネルのマッピングテーブルにメッセージ送信済みフラグを追加
-cursor.execute("""
-ALTER TABLE event_channels ADD COLUMN message_sent BOOLEAN DEFAULT 0
-""")
-conn.commit()
+try:
+    cursor.execute("""
+    ALTER TABLE event_channels ADD COLUMN message_sent BOOLEAN DEFAULT 0
+    """)
+    conn.commit()
+except sqlite3.OperationalError as e:
+    if "duplicate column name" in str(e):
+        print("Column 'message_sent' already exists. Skipping ALTER TABLE.")
+    else:
+        raise
 
 # 環境変数の読み込み
 load_dotenv()

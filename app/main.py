@@ -128,7 +128,17 @@ async def create_event(interaction: discord.Interaction, number_of_players: int 
         start_time_obj = datetime.strptime(start_time, "%H:%M")
         # Asia/Tokyoのタイムゾーンを適用
         tokyo_tz = timezone(timedelta(hours=9))
-        start_time_utc = datetime.now(tokyo_tz).replace(hour=start_time_obj.hour, minute=start_time_obj.minute, second=0, microsecond=0).astimezone(timezone.utc)
+        now_tokyo = datetime.now(tokyo_tz)
+        start_time_utc = now_tokyo.replace(hour=start_time_obj.hour, minute=start_time_obj.minute, second=0, microsecond=0).astimezone(timezone.utc)
+
+        # 入力された時間が過去の場合
+        if start_time_utc < now_tokyo.astimezone(timezone.utc):
+            await interaction.response.send_message("開始時間が過去の時間です。未来の時間を指定してください。", ephemeral=True)
+            return
+
+        # デフォルトの21:00が指定され、現在時刻が21:00以降の場合
+        if start_time == "21:00" and now_tokyo.hour >= 21:
+            start_time_utc = (now_tokyo + timedelta(minutes=30)).replace(second=0, microsecond=0).astimezone(timezone.utc)
     except ValueError:
         await interaction.response.send_message("開始時間の形式が正しくありません。hh:mm形式で入力してください (例: 21:00)。", ephemeral=True)
         return

@@ -7,4 +7,5 @@ services:
       - .:/workspace
     env_file:
       - .env
-    command: sleep infinity
+    command: python3 app/main.py
+    restart: always

@@ -1,6 +1,9 @@
 {
   "name": "Discord Bot Dev",
-  "dockerComposeFile": "../docker-compose.yml",
+  "dockerComposeFile": [
+    "../docker-compose.yml",
+    "../docker-compose.dev.yml"
+  ],
   "service": "bot",
   "workspaceFolder": "/workspace",
   "customizations": {
@@ -14,5 +17,6 @@
         "terminal.integrated.defaultProfile.linux": "bash"
       }
     }
-  }
+  },
+  "remoteUser": "vscode",
 }

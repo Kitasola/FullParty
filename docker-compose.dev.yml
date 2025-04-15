@@ -1,3 +1,5 @@
 services:
   bot:
     command: sleep infinity
+    environment:
+      - ENV_TYPE=development

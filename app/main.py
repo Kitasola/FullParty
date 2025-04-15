@@ -47,6 +47,11 @@ except sqlite3.OperationalError as e:
 # 環境変数の読み込み
 load_dotenv()
 TOKEN = os.getenv("DISCORD_BOT_TOKEN")
+DEV_GUILD_ID = os.getenv("DEV_GUILD_ID")
+
+# 環境変数から環境タイプとギルドIDを取得
+ENV_TYPE = os.getenv("ENV_TYPE", "production")  # デフォルトは本番環境
+DEV_GUILD_ID = os.getenv("DEV_GUILD_ID")  # 開発環境用ギルドID
 
 # スケジューラの初期化
 scheduler = AsyncIOScheduler()
@@ -107,10 +112,29 @@ async def on_ready():
     # Bot が起動したときにログを出力し、スラッシュコマンドを同期
     print(f"Logged in as {client.user}")
     try:
-        synced = await client.tree.sync()
-        print(f"Synced {len(synced)} global commands.")
+        if ENV_TYPE == "development":
+            # 開発環境: ギルドコマンドとして登録
+            if DEV_GUILD_ID:
+                guild = discord.Object(id=int(DEV_GUILD_ID))
+                synced = await client.tree.sync(guild=guild)
+                print(f"Synced {len(synced)} commands to guild {DEV_GUILD_ID}.")
+            else:
+                print("DEV_GUILD_ID is not set. Cannot sync commands in development environment.")
+        else:
+            # 本番環境: グローバルコマンドとして登録
+            synced = await client.tree.sync()
+            print(f"Synced {len(synced)} global commands.")
     except Exception as e:
         print(f"Error syncing commands: {e}")
+
+@client.event
+async def on_interaction(interaction: discord.Interaction):
+    # 本番環境で除外ギルドIDが設定されている場合、そのギルドからのリクエストを無視
+    if ENV_TYPE == "production" and DEV_GUILD_ID and str(interaction.guild_id) == DEV_GUILD_ID:
+        print(f"Ignoring interaction from excluded guild {DEV_GUILD_ID}.")
+        return
+
+    await client.process_application_commands(interaction)
 
 # デフォルトチャンネルを設定するスラッシュコマンド
 @client.tree.command(name="set_channel", description="イベント作成のデフォルトチャンネルを設定します。")

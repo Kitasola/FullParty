@@ -1,4 +1,4 @@
-from .general import set_channel, create_event
+from .recruitment import set_channel, create_event
 
 def register_commands(client):
     print("Registering commands...")

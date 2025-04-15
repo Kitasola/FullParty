@@ -1,4 +1,4 @@
-from .event_tasks import monitor_event_participants, cleanup_old_events
+from .recruitment import monitor_event_participants, cleanup_old_events
 import asyncio
 from asyncio import get_event_loop
 

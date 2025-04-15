@@ -127,15 +127,6 @@ async def on_ready():
     except Exception as e:
         print(f"Error syncing commands: {e}")
 
-@client.event
-async def on_interaction(interaction: discord.Interaction):
-    # 本番環境で除外ギルドIDが設定されている場合、そのギルドからのリクエストを無視
-    if ENV_TYPE == "production" and DEV_GUILD_ID and str(interaction.guild_id) == DEV_GUILD_ID:
-        print(f"Ignoring interaction from excluded guild {DEV_GUILD_ID}.")
-        return
-
-    await client.process_application_commands(interaction)
-
 # デフォルトチャンネルを設定するスラッシュコマンド
 @client.tree.command(name="set_channel", description="イベント作成のデフォルトチャンネルを設定します。")
 @app_commands.describe(channel="デフォルトに設定するボイスチャンネルです。")

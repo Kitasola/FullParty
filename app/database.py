@@ -10,25 +10,39 @@ conn = sqlite3.connect(db_path)
 cursor = conn.cursor()
 
 # サーバー設定テーブルの作成
+# ギルドID (プライマリキー) とチャンネルID を含む
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS server_settings (
-    guild_id INTEGER PRIMARY KEY,  # ギルドID (プライマリキー)
-    channel_id INTEGER             # チャンネルID
+    guild_id INTEGER PRIMARY KEY,
+    channel_id INTEGER
 )
 """)
 
 # イベント情報テーブルの作成
+# イベントID、チャンネルID、メッセージ送信フラグ、最大参加人数などを含む
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS event_info (
-    event_id INTEGER PRIMARY KEY,      # イベントID (プライマリキー)
-    channel_id INTEGER,                # チャンネルID
-    message_sent BOOLEAN DEFAULT 0,    # メッセージ送信フラグ (デフォルト: 0)
-    max_participants INTEGER,          # 最大参加人数
-    recruitment_time DATETIME,         # 募集時間
-    game_name TEXT,                    # ゲーム名
-    available_count INTEGER DEFAULT 0, # 参加可能人数 (デフォルト: 0)
-    unavailable_count INTEGER DEFAULT 0 # 参加不可能人数 (デフォルト: 0)
+    event_id INTEGER PRIMARY KEY,
+    channel_id INTEGER,
+    message_sent BOOLEAN DEFAULT 0,
+    max_participants INTEGER,
+    recruitment_time DATETIME,
+    game_name TEXT,
+    available_count INTEGER DEFAULT 0,
+    unavailable_count INTEGER DEFAULT 0
 )
 """)
+
+# マップ情報テーブルの作成
+# マップID、マップ名（英語・日本語）、マップ画像のローカルパスを含む
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS map_info (
+    map_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    map_name_en TEXT NOT NULL,
+    map_name_jp TEXT NOT NULL,
+    map_image_path TEXT
+)
+""")
+
 # テーブル作成の変更を保存
 conn.commit()

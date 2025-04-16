@@ -18,6 +18,7 @@ class MyBot(commands.Bot):
 # Bot のセットアップ
 intents = discord.Intents.default()
 intents.guild_scheduled_events = True  # スケジュールされたイベントの Intent を有効化
+intents.message_content = True  # メッセージ内容の Intent を有効化
 client = MyBot(command_prefix="/", intents=intents)
 
 @client.event

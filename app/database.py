@@ -19,11 +19,11 @@ CREATE TABLE IF NOT EXISTS server_settings (
 """)
 
 # イベント情報テーブルの作成
-# イベントID、チャンネルID、メッセージ送信フラグ、最大参加人数などを含む
+# イベントID、メッセージID、メッセージ送信フラグ、最大参加人数などを含む
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS event_info (
     event_id INTEGER PRIMARY KEY,
-    channel_id INTEGER,
+    message_id INTEGER,
     message_sent BOOLEAN DEFAULT 0,
     max_participants INTEGER,
     recruitment_time DATETIME,

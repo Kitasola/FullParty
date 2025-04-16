@@ -7,6 +7,15 @@ from datetime import datetime, timezone, timedelta
 from discord.ui import View, Button
 from discord import Embed
 
+# 部分一致でフィールドを更新する関数
+def update_field_by_partial_name(embed: discord.Embed, partial_name: str, num: int, value: str, inline: bool = False):
+    for index, field in enumerate(embed.fields):
+        if partial_name in field.name:  # 部分一致で検索
+            embed.set_field_at(index, name=f"{partial_name} ({num}人)", value=value, inline=inline)
+            return
+    # フィールドが見つからない場合、新しいフィールドを追加
+    embed.add_field(name=f"{partial_name} ({num}人)", value=value, inline=inline)
+
 class EventResponseView(View):
     def __init__(self, message):
         super().__init__(timeout=None)
@@ -15,12 +24,14 @@ class EventResponseView(View):
         self.message = message
 
     async def update_message(self):
-        yes_count = len(self.yes_users)
-        no_count = len(self.no_users)
         embed = self.message.embeds[0]  # 既存の埋め込みメッセージを取得
-        embed.set_field_at(index=1, name="参加状況", value=f"参加可能: {yes_count}人\n参加不可: {no_count}人", inline=False)
+
+        # 参加者リストを更新
+        update_field_by_partial_name(embed, "参加可能者", len(self.yes_users), "\n".join(map(lambda user_id: f"<@{user_id}>", self.yes_users)) or "なし", inline=False)
+        update_field_by_partial_name(embed, "参加不可者", len(self.no_users), "\n".join(map(lambda user_id: f"<@{user_id}>", self.no_users)) or "なし", inline=False)
+
         await self.message.edit(embed=embed, view=self)
-    
+
     async def check_attendance(self, interaction: discord.Interaction):
         # 募集人数を取得
         cursor.execute("SELECT max_participants FROM event_info WHERE message_id = ?", (self.message.id,))
@@ -145,7 +156,10 @@ async def create_event(interaction: discord.Interaction, number_of_players: int 
     # embed.add_field(name="募集人数", value=f"{number_of_players}人", inline=True)
     embed = Embed(title=f"{game_name}募集 @{number_of_players}", description=f"[イベントリンク]({event.url})", color=0x00ff00)
     embed.add_field(name="開始時間", value=start_time, inline=True)
-    embed.add_field(name="参加状況", value="参加可能: 0人\n参加不可: 0人", inline=False)
+    embed.add_field(name="ボイスチャンネル", value=channel.mention, inline=True)
+    embed.add_field(name="参加者リスト", value="", inline=False)
+    # embed.add_field(name="参加可能者 (0人)", value="", inline=False)
+    # embed.add_field(name="参加不可者 (0人)", value="", inline=False)
     embed.set_footer(text="ボタンをクリックして参加状況を更新してください。")
 
     message = await interaction.followup.send(embed=embed, ephemeral=False)

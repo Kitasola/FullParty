@@ -33,6 +33,11 @@ async def cleanup_old_events(client, scheduler):
                 if (discord.utils.utcnow() - event.start_time).total_seconds() > 86400:  # 1日以上経過
                     await event.delete()
                     print(f"削除されたイベント: {event.name}")
+
+                    # イベント削除時にDBのレコードも削除
+                    cursor.execute("DELETE FROM event_channels WHERE event_id = ?", (event.id,))
+                    conn.commit()
+                    print(f"削除されたDBレコード: イベントID {event.id}")
         except Exception as e:
             print(f"Error while cleaning up events in guild {guild.name}: {e}")
     scheduler.resume_job('monitor_event_participants')

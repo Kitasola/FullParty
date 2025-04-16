@@ -1,10 +1,8 @@
-from .recruitment import set_channel, create_event
+from .recruitment import fp_group
 
 def register_commands(client):
     print("Registering commands...")
-    client.tree.add_command(set_channel)
-    print(f"Registered command: {set_channel.name}")
-    client.tree.add_command(create_event)
-    print(f"Registered command: {create_event.name}")
-
+    client.tree.add_command(fp_group)
+    print(f"Registered command group: {fp_group.name}")
+    
 __all__ = ["register_commands"]

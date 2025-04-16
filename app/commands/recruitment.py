@@ -4,8 +4,11 @@ import discord
 from database import cursor, conn
 from datetime import datetime, timezone, timedelta
 
-# デフォルトチャンネルを設定するスラッシュコマンド
-@app_commands.command(name="set_channel", description="イベント作成のデフォルトチャンネルを設定します。")
+# コマンドグループを作成
+fp_group = app_commands.Group(name="fp", description="ゲーム募集関連のコマンド")
+
+# コマンドグループにコマンドを追加
+@fp_group.command(name="init", description="イベント作成のデフォルトチャンネルを設定します。")
 @app_commands.describe(channel="デフォルトに設定するボイスチャンネルです。")
 async def set_channel(interaction: discord.Interaction, channel: discord.VoiceChannel):
     guild_id = interaction.guild.id
@@ -17,8 +20,7 @@ async def set_channel(interaction: discord.Interaction, channel: discord.VoiceCh
 
     await interaction.response.send_message(f"デフォルトチャンネルを {channel.mention} に設定しました。", ephemeral=True)
 
-# ゲーム募集イベントを作成するスラッシュコマンド
-@app_commands.command(name="create_event", description="ゲーム募集イベントを作成します。")
+@fp_group.command(name="create", description="ゲーム募集イベントを作成します。")
 @app_commands.describe(number_of_players="募集人数 (デフォルト: 4)", start_time="開始時間 (hh:mm形式、例: 21:00)", game_name="募集するゲーム名 (デフォルト: VALORANT)")
 async def create_event(interaction: discord.Interaction, number_of_players: int = 4, start_time: str = "21:00", game_name: str = "VALORANT"):
     # 開始時間を検証
@@ -46,14 +48,14 @@ async def create_event(interaction: discord.Interaction, number_of_players: int 
     result = cursor.fetchone()
 
     if not result:
-        await interaction.response.send_message("デフォルトチャンネルが設定されていません。/set_channel コマンドを使用して設定してください。", ephemeral=True)
+        await interaction.response.send_message("デフォルトチャンネルが設定されていません。/fp init コマンドを使用して設定してください。", ephemeral=True)
         return
 
     channel_id = result[0]
     channel = interaction.guild.get_channel(channel_id)
 
     if not channel:
-        await interaction.response.send_message("デフォルトチャンネルが無効です。/set_channel コマンドを使用して再設定してください。", ephemeral=True)
+        await interaction.response.send_message("デフォルトチャンネルが無効です。/fp init コマンドを使用して再設定してください。", ephemeral=True)
         return
 
     # イベントを作成

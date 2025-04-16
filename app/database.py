@@ -1,11 +1,10 @@
-# sqlite3モジュールをインポート
+from config import MAP_INFO_CSV, DB_PATH
 import sqlite3
+import csv
 
 # SQLite データベースのセットアップ
-# データベースファイルのパス
-db_path = "server_settings.db"
 # データベース接続を作成
-conn = sqlite3.connect(db_path)
+conn = sqlite3.connect(DB_PATH)
 # カーソルを作成
 cursor = conn.cursor()
 
@@ -43,6 +42,21 @@ CREATE TABLE IF NOT EXISTS map_info (
     map_image_path TEXT
 )
 """)
+
+def initialize_map_info():
+    with open(MAP_INFO_CSV, 'r', encoding='utf-8') as csvfile:
+        reader = csv.reader(csvfile)
+        next(reader)  # ヘッダーをスキップ
+        cursor.execute("DELETE FROM map_info")  # 既存データを削除
+        for row in reader:
+            cursor.execute(
+                "INSERT INTO map_info (map_id, map_name_en, map_name_jp, map_image_path) VALUES (?, ?, ?, ?)",
+                (int(row[0]), row[1], row[2], row[3])
+            )
+        conn.commit()
+
+# アプリケーション起動時にマップ情報を初期化
+initialize_map_info()
 
 # テーブル作成の変更を保存
 conn.commit()

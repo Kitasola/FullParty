@@ -15,3 +15,6 @@ DEV_GUILD_ID = os.getenv("DEV_GUILD_ID")
 ENV_TYPE = os.getenv("ENV_TYPE", "production")
 # マップ画像の保存先ディレクトリ (絶対パス)
 MAP_IMAGE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../image/maps/"))
+MAP_INFO_CSV =  os.path.join(MAP_IMAGE_DIR, "map_info.csv")
+# データベースファイルのパス
+DB_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "../server_settings.db"))

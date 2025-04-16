@@ -27,7 +27,7 @@ async def random_map(interaction: discord.Interaction):
     map_image_path = os.path.join(MAP_IMAGE_DIR, map_image_path)
 
     # メッセージを送信
-    embed = discord.Embed(title="抽選結果", description=f"選ばれたマップ: {map_name_jp} ({map_name_en})")
+    embed = discord.Embed(title="抽選結果", description=f"**{map_name_jp}** ({map_name_en})", color=0x3498db)
     if map_image_path:
         file = discord.File(map_image_path, filename="map.png")
         embed.set_image(url=f"attachment://map.png")

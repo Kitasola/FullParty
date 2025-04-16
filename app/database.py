@@ -13,23 +13,17 @@ CREATE TABLE IF NOT EXISTS server_settings (
 )
 """)
 
-# イベントとチャンネルのマッピングテーブル
+# イベント情報テーブル
 cursor.execute("""
-CREATE TABLE IF NOT EXISTS event_channels (
+CREATE TABLE IF NOT EXISTS event_info (
     event_id INTEGER PRIMARY KEY,
-    channel_id INTEGER
+    channel_id INTEGER,
+    message_sent BOOLEAN DEFAULT 0,
+    max_participants INTEGER,
+    recruitment_time DATETIME,
+    game_name TEXT,
+    available_count INTEGER DEFAULT 0,
+    unavailable_count INTEGER DEFAULT 0
 )
 """)
 conn.commit()
-
-# イベントとチャンネルのマッピングテーブルにメッセージ送信済みフラグを追加
-try:
-    cursor.execute("""
-    ALTER TABLE event_channels ADD COLUMN message_sent BOOLEAN DEFAULT 0
-    """)
-    conn.commit()
-except sqlite3.OperationalError as e:
-    if "duplicate column name" in str(e):
-        print("Column 'message_sent' already exists. Skipping ALTER TABLE.")
-    else:
-        raise

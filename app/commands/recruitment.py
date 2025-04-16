@@ -69,7 +69,8 @@ async def create_event(interaction: discord.Interaction, number_of_players: int 
     )
 
     # イベントIDと作成チャンネルIDをデータベースに保存
-    cursor.execute("INSERT INTO event_channels (event_id, channel_id) VALUES (?, ?)", (event.id, interaction.channel_id))
+    cursor.execute("INSERT INTO event_info (event_id, channel_id, max_participants, recruitment_time, game_name) VALUES (?, ?, ?, ?, ?)",
+                   (event.id, interaction.channel_id, number_of_players, start_time_utc, game_name))
     conn.commit()
 
     # イベント作成メッセージをスラッシュコマンドへの返信として送信

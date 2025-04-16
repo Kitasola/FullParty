@@ -11,7 +11,7 @@ async def monitor_event_participants(client):
                     attendees = [user async for user in event.users()]
                     required_attendees = int(event.name.split("@")[1])  # 募集人数をevent.nameから抽出
                     if len(attendees) >= required_attendees:
-                        cursor.execute("SELECT channel_id, message_sent FROM event_channels WHERE event_id = ?", (event.id,))
+                        cursor.execute("SELECT channel_id, message_sent FROM event_info WHERE event_id = ?", (event.id,))
                         result = cursor.fetchone()
                         if result:
                             channel_id, message_sent = result
@@ -19,7 +19,7 @@ async def monitor_event_participants(client):
                                 channel = guild.get_channel(channel_id)
                                 if channel:
                                     await channel.send(f"〆 {event.name} {event.description}")
-                                    cursor.execute("UPDATE event_channels SET message_sent = 1 WHERE event_id = ?", (event.id,))
+                                    cursor.execute("UPDATE event_info SET message_sent = 1 WHERE event_id = ?", (event.id,))
                                     conn.commit()
         except Exception as e:
             print(f"Error while monitoring events in guild {guild.name}: {e}")
@@ -35,7 +35,7 @@ async def cleanup_old_events(client, scheduler):
                     print(f"削除されたイベント: {event.name}")
 
                     # イベント削除時にDBのレコードも削除
-                    cursor.execute("DELETE FROM event_channels WHERE event_id = ?", (event.id,))
+                    cursor.execute("DELETE FROM event_info WHERE event_id = ?", (event.id,))
                     conn.commit()
                     print(f"削除されたDBレコード: イベントID {event.id}")
         except Exception as e:

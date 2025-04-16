@@ -1,13 +1,14 @@
+# discord.pyのapp_commandsをインポート
 from discord import app_commands
 import discord
-# from bot import client
+# データベース操作用のモジュールをインポート
 from database import cursor, conn
 from datetime import datetime, timezone, timedelta
 
 # コマンドグループを作成
 fp_group = app_commands.Group(name="fp", description="ゲーム募集関連のコマンド")
 
-# コマンドグループにコマンドを追加
+# デフォルトチャンネルを設定するコマンド
 @fp_group.command(name="init", description="イベント作成のデフォルトチャンネルを設定します。")
 @app_commands.describe(channel="デフォルトに設定するボイスチャンネルです。")
 async def set_channel(interaction: discord.Interaction, channel: discord.VoiceChannel):
@@ -18,8 +19,10 @@ async def set_channel(interaction: discord.Interaction, channel: discord.VoiceCh
     cursor.execute("REPLACE INTO server_settings (guild_id, channel_id) VALUES (?, ?)", (guild_id, channel_id))
     conn.commit()
 
+    # ユーザーに設定完了を通知
     await interaction.response.send_message(f"デフォルトチャンネルを {channel.mention} に設定しました。", ephemeral=True)
 
+# ゲーム募集イベントを作成するコマンド
 @fp_group.command(name="create", description="ゲーム募集イベントを作成します。")
 @app_commands.describe(number_of_players="募集人数 (デフォルト: 4)", start_time="開始時間 (hh:mm形式、例: 21:00)", game_name="募集するゲーム名 (デフォルト: VALORANT)")
 async def create_event(interaction: discord.Interaction, number_of_players: int = 4, start_time: str = "21:00", game_name: str = "VALORANT"):

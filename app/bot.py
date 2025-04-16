@@ -1,8 +1,14 @@
+# discord.pyライブラリをインポート
 import discord
+# discord.ext.commandsをインポート
 from discord.ext import commands
+# 非同期スケジューラをインポート
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
+# コマンド登録用の関数をインポート
 from commands import register_commands
+# タスク登録用の関数をインポート
 from tasks import register_tasks
+# 環境変数の設定をインポート
 from config import ENV_TYPE, DEV_GUILD_ID
 
 # スケジューラの初期化
@@ -11,14 +17,19 @@ scheduler = AsyncIOScheduler()
 # カスタム Bot クラス
 class MyBot(commands.Bot):
     async def setup_hook(self):
+        # スケジューラを開始
         scheduler.start()
+        # コマンドを登録
         register_commands(self)
+        # タスクを登録
         register_tasks(self, scheduler)
 
 # Bot のセットアップ
 intents = discord.Intents.default()
-intents.guild_scheduled_events = True  # スケジュールされたイベントの Intent を有効化
-intents.message_content = True  # メッセージ内容の Intent を有効化
+# スケジュールされたイベントの Intent を有効化
+intents.guild_scheduled_events = True
+# メッセージ内容の Intent を有効化
+intents.message_content = True
 client = MyBot(command_prefix="/", intents=intents)
 
 @client.event

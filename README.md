@@ -1,6 +1,6 @@
 # FullParty
 いつものゲームライフを少し便利にするDiscord Bot  
-[インストールリンク](https://discord.com/oauth2/authorize?client_id=1359855799676960930&permissions=11005855744&integration_type=0&scope=bot+applications.commands)
+[インストールリンク](https://discord.com/oauth2/authorize?client_id=1359855799676960930&permissions=17602923464704&integration_type=0&scope=bot+applications.commands)
 
 ## ゲーム募集
 ゲーム募集用のイベントを作成する機能

@@ -41,7 +41,7 @@ class EventResponseView(View):
 
             # 埋め込みメッセージを作成
             tokyo_tz = timezone(timedelta(hours=9))
-            embed = Embed(title=f"{self.game_name}募集 @{self.number_of_players}", description=f"[イベントリンク]({self.event.url})", color=0x00ff00)
+            embed = Embed(title=f"{self.game_name}募集 @{self.number_of_players}", description=f"[イベントリンク]({self.event.url})", color=0x3498db)
             embed.add_field(name="開始時間", value=self.start_time_utc.astimezone(tokyo_tz).strftime("%H:%M"), inline=True)
             embed.add_field(name="ボイスチャンネル", value=self.channel.mention, inline=True)
             embed.add_field(name="参加者リスト", value="", inline=False)
@@ -78,13 +78,18 @@ class EventResponseView(View):
                 # 完了メッセージを返信
                 await interaction.followup.send(f"〆", ephemeral=False)
 
-                # イベントの説明を更新
-                cursor.execute("SELECT event_id FROM event_info WHERE message_id = ?", (self.message.id,))
-                result = cursor.fetchone()
-                if result:
-                    event_id = result[0]
-                    event = await interaction.guild.fetch_scheduled_event(event_id)
-                    await event.edit(description="募集完了")
+                # 埋め込みメッセージを更新
+                embed = self.message.embeds[0]  # 既存の埋め込みメッセージを取得
+                embed.title = f"{embed.title}  〆"
+                embed.color = 0x808080
+                await self.message.edit(embed=embed, view=self)
+
+                # Discordのスケジュールイベントを更新
+                try:
+                    event = await interaction.guild.fetch_scheduled_event(self.event.id)
+                    await event.edit(name=f"{event.name} 〆", description="募集完了")
+                except Exception as e:
+                    print(f"Error updating event: {e}")
 
     @discord.ui.button(label="YES", style=discord.ButtonStyle.green)
     async def yes_button(self, interaction: discord.Interaction, button: Button):

@@ -150,22 +150,16 @@ async def create_event(interaction: discord.Interaction, number_of_players: int 
     )
 
     # イベント作成メッセージを埋め込み形式で送信
-    await interaction.response.defer()  # 応答を遅延させる
-    # embed = Embed(title="ゲーム募集イベント", description=f"[イベントリンク]({event.url})", color=0x00ff00)
-    # embed.add_field(name="ゲーム名", value=game_name, inline=False)
-    # embed.add_field(name="募集人数", value=f"{number_of_players}人", inline=True)
+    await interaction.response.send_message("イベントの作成を受付ました。", ephemeral=True)
     embed = Embed(title=f"{game_name}募集 @{number_of_players}", description=f"[イベントリンク]({event.url})", color=0x00ff00)
     embed.add_field(name="開始時間", value=start_time, inline=True)
     embed.add_field(name="ボイスチャンネル", value=channel.mention, inline=True)
     embed.add_field(name="参加者リスト", value="", inline=False)
-    # embed.add_field(name="参加可能者 (0人)", value="", inline=False)
-    # embed.add_field(name="参加不可者 (0人)", value="", inline=False)
     embed.set_footer(text="ボタンをクリックして参加状況を更新してください。")
 
-    message = await interaction.followup.send(embed=embed, ephemeral=False)
+    message = await interaction.channel.send(embed=embed)
     view = EventResponseView(message=message)
     await view.update_message()
-
 
     # イベント情報をデータベースに保存
     cursor.execute("INSERT INTO event_info (event_id, message_id, max_participants, recruitment_time, game_name) VALUES (?, ?, ?, ?, ?)",

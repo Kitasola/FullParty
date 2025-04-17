@@ -27,8 +27,8 @@ class EventResponseView(View):
         embed = self.message.embeds[0]  # 既存の埋め込みメッセージを取得
 
         # 参加者リストを更新
-        update_field_by_partial_name(embed, "参加可能者", len(self.yes_users), "\n".join(map(lambda user_id: f"<@{user_id}>", self.yes_users)) or "なし", inline=False)
-        update_field_by_partial_name(embed, "参加不可者", len(self.no_users), "\n".join(map(lambda user_id: f"<@{user_id}>", self.no_users)) or "なし", inline=False)
+        update_field_by_partial_name(embed, "参加可能", len(self.yes_users), "\n".join(map(lambda user_id: f"<@{user_id}>", self.yes_users)) or "なし", inline=False)
+        update_field_by_partial_name(embed, "参加不可", len(self.no_users), "\n".join(map(lambda user_id: f"<@{user_id}>", self.no_users)) or "なし", inline=False)
 
         await self.message.edit(embed=embed, view=self)
 
@@ -100,7 +100,7 @@ async def set_channel(interaction: discord.Interaction, channel: discord.VoiceCh
 
 # ゲーム募集イベントを作成するコマンド
 @fp_group.command(name="create", description="ゲーム募集イベントを作成します。")
-@app_commands.describe(number_of_players="募集人数 (デフォルト: 5)", start_time="開始時間 (hh:mm形式、例: 21:00)", game_name="募集するゲーム名 (デフォルト: VALORANT)")
+@app_commands.describe(number_of_players="募集人数 (デフォルト: 5)", start_time="開始時間 (hh:mm形式、デフォルト: 21:00)", game_name="募集するゲーム名 (デフォルト: VALORANT)")
 async def create_event(interaction: discord.Interaction, number_of_players: int = 5, start_time: str = "21:00", game_name: str = "VALORANT"):
     # 開始時間を検証
     try:

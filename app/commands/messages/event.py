@@ -42,16 +42,16 @@ class EventResponseView(View):
             # 埋め込みメッセージを作成
             tokyo_tz = timezone(timedelta(hours=9))
             embed = Embed(title=f"{self.game_name}募集 @{self.number_of_players}", description=f"[イベントリンク]({self.event.url})", color=0x3498db)
-            embed.add_field(name="開始時間", value=self.start_time_utc.astimezone(tokyo_tz).strftime("%H:%M"), inline=True)
-            embed.add_field(name="ボイスチャンネル", value=self.channel.mention, inline=True)
+            embed.add_field(name=":clock9:開始時間", value=self.start_time_utc.astimezone(tokyo_tz).strftime("%H:%M"), inline=True)
+            embed.add_field(name=":loud_sound:VC", value=self.channel.mention, inline=True)
             embed.add_field(name="参加者リスト", value="", inline=False)
             embed.set_footer(text="ボタンをクリックして参加状況を更新してください。")
             self.message = await self.interaction.channel.send(embed=embed)
         else:
             embed = self.message.embeds[0]  # 既存の埋め込みメッセージを取得
             # 参加者リストを更新
-            update_field_by_partial_name(embed, "参加可能", len(self.yes_users), "\n".join(map(lambda user_id: f"<@{user_id}>", self.yes_users)) or "なし", inline=False)
-            update_field_by_partial_name(embed, "参加不可", len(self.no_users), "\n".join(map(lambda user_id: f"<@{user_id}>", self.no_users)) or "なし", inline=False)
+            update_field_by_partial_name(embed, ":thumbsup:YES", len(self.yes_users), "\n".join(map(lambda user_id: f"<@{user_id}>", self.yes_users)) or "なし", inline=False)
+            update_field_by_partial_name(embed, ":thumbsdown:NO", len(self.no_users), "\n".join(map(lambda user_id: f"<@{user_id}>", self.no_users)) or "なし", inline=False)
             await self.message.edit(embed=embed, view=self)
 
     async def check_attendance(self, interaction: discord.Interaction):

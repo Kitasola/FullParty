@@ -150,14 +150,14 @@ async def create_event(interaction: discord.Interaction, number_of_players: int 
     )
 
     # イベント作成メッセージを埋め込み形式で送信
-    await interaction.response.defer()  # 応答を遅延させる
+    await interaction.response.send_message("イベントの作成を受付ました。", ephemeral=True)
     embed = Embed(title=f"{game_name}募集 @{number_of_players}", description=f"[イベントリンク]({event.url})", color=0x00ff00)
     embed.add_field(name="開始時間", value=start_time, inline=True)
     embed.add_field(name="ボイスチャンネル", value=channel.mention, inline=True)
     embed.add_field(name="参加者リスト", value="", inline=False)
     embed.set_footer(text="ボタンをクリックして参加状況を更新してください。")
 
-    message = await interaction.followup.send(embed=embed, ephemeral=False)
+    message = await interaction.channel.send(embed=embed)
     view = EventResponseView(message=message)
 
     # コマンド実行者を初期参加者として追加

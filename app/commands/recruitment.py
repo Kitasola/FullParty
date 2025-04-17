@@ -100,8 +100,8 @@ async def set_channel(interaction: discord.Interaction, channel: discord.VoiceCh
 
 # ゲーム募集イベントを作成するコマンド
 @fp_group.command(name="create", description="ゲーム募集イベントを作成します。")
-@app_commands.describe(number_of_players="募集人数 (デフォルト: 4)", start_time="開始時間 (hh:mm形式、例: 21:00)", game_name="募集するゲーム名 (デフォルト: VALORANT)")
-async def create_event(interaction: discord.Interaction, number_of_players: int = 4, start_time: str = "21:00", game_name: str = "VALORANT"):
+@app_commands.describe(number_of_players="募集人数 (デフォルト: 5)", start_time="開始時間 (hh:mm形式、例: 21:00)", game_name="募集するゲーム名 (デフォルト: VALORANT)")
+async def create_event(interaction: discord.Interaction, number_of_players: int = 5, start_time: str = "21:00", game_name: str = "VALORANT"):
     # 開始時間を検証
     try:
         start_time_obj = datetime.strptime(start_time, "%H:%M")
@@ -151,21 +151,18 @@ async def create_event(interaction: discord.Interaction, number_of_players: int 
 
     # イベント作成メッセージを埋め込み形式で送信
     await interaction.response.defer()  # 応答を遅延させる
-    # embed = Embed(title="ゲーム募集イベント", description=f"[イベントリンク]({event.url})", color=0x00ff00)
-    # embed.add_field(name="ゲーム名", value=game_name, inline=False)
-    # embed.add_field(name="募集人数", value=f"{number_of_players}人", inline=True)
     embed = Embed(title=f"{game_name}募集 @{number_of_players}", description=f"[イベントリンク]({event.url})", color=0x00ff00)
     embed.add_field(name="開始時間", value=start_time, inline=True)
     embed.add_field(name="ボイスチャンネル", value=channel.mention, inline=True)
     embed.add_field(name="参加者リスト", value="", inline=False)
-    # embed.add_field(name="参加可能者 (0人)", value="", inline=False)
-    # embed.add_field(name="参加不可者 (0人)", value="", inline=False)
     embed.set_footer(text="ボタンをクリックして参加状況を更新してください。")
 
     message = await interaction.followup.send(embed=embed, ephemeral=False)
     view = EventResponseView(message=message)
-    await view.update_message()
 
+    # コマンド実行者を初期参加者として追加
+    view.yes_users.add(interaction.user.id)
+    await view.update_message()
 
     # イベント情報をデータベースに保存
     cursor.execute("INSERT INTO event_info (event_id, message_id, max_participants, recruitment_time, game_name) VALUES (?, ?, ?, ?, ?)",

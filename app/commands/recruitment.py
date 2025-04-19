@@ -3,7 +3,7 @@ from discord import app_commands
 import discord
 # データベース操作用のモジュールをインポート
 from database import cursor, conn
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone, timedelta, date
 from discord.ui import View, Button
 from discord import Embed
 from .messages.event import EventResponseView
@@ -27,8 +27,16 @@ async def set_channel(interaction: discord.Interaction, channel: discord.VoiceCh
 
 # ゲーム募集イベントを作成するコマンド
 @fp_group.command(name="create", description="ゲーム募集イベントを作成します。")
-@app_commands.describe(number_of_players="募集人数 (デフォルト: 5)", start_time="開始時間 (hh:mm形式、デフォルト: 21:00)", game_name="募集するゲーム名 (デフォルト: VALORANT)")
-async def create_event(interaction: discord.Interaction, number_of_players: int = 5, start_time: str = "21:00", game_name: str = "VALORANT"):
+@app_commands.describe(number_of_players="募集人数 (デフォルト: 5)", start_time="開始時間 (hh:mm形式、デフォルト: 平日: 21:00, 土日: 13:00)", game_name="募集するゲーム名 (デフォルト: VALORANT)", voice_channel="募集を行うボイスチャンネル (デフォルト: 設定済みのデフォルトチャンネル)")
+async def create_event(interaction: discord.Interaction, number_of_players: int = 5, start_time: str = None, game_name: str = "VALORANT", voice_channel: discord.VoiceChannel = None):
+    # 曜日によるデフォルト値の設定
+    if start_time is None:
+        today = date.today()
+        if today.weekday() >= 5:  # 土日
+            start_time = "13:00"
+        else:  # 平日
+            start_time = "21:00"
+
     # 開始時間を検証
     try:
         start_time_obj = datetime.strptime(start_time, "%H:%M")
@@ -37,34 +45,37 @@ async def create_event(interaction: discord.Interaction, number_of_players: int 
         now_tokyo = datetime.now(tokyo_tz)
         start_time_utc = now_tokyo.replace(hour=start_time_obj.hour, minute=start_time_obj.minute, second=0, microsecond=0).astimezone(timezone.utc)
 
+        # デフォルトの時間が指定され、現在時刻が指定時間以降の場合は30分後に設定
+        if (start_time == "21:00" and now_tokyo.hour >= 21) or \
+            (today.weekday() >= 5 and start_time == "13:00" and now_tokyo.hour >= 13):
+            start_time_utc = (now_tokyo + timedelta(minutes=30)).replace(second=0, microsecond=0).astimezone(timezone.utc)
+
         # 入力された時間が過去の場合
         if start_time_utc < now_tokyo.astimezone(timezone.utc):
             await interaction.response.send_message("開始時間が過去の時間です。未来の時間を指定してください。", ephemeral=True)
             return
-
-        # デフォルトの21:00が指定され、現在時刻が21:00以降の場合
-        if start_time == "21:00" and now_tokyo.hour >= 21:
-            start_time_utc = (now_tokyo + timedelta(minutes=30)).replace(second=0, microsecond=0).astimezone(timezone.utc)
     except ValueError:
         await interaction.response.send_message("開始時間の形式が正しくありません。hh:mm形式で入力してください (例: 21:00)。", ephemeral=True)
         return
 
-    guild_id = interaction.guild.id
-    cursor.execute("SELECT channel_id FROM server_settings WHERE guild_id = ?", (guild_id,))
-    result = cursor.fetchone()
+    # ボイスチャンネルのチェック
+    if voice_channel is None:
+        guild_id = interaction.guild.id
+        cursor.execute("SELECT channel_id FROM server_settings WHERE guild_id = ?", (guild_id,))
+        result = cursor.fetchone()
 
-    if not result:
-        await interaction.response.send_message("デフォルトチャンネルが設定されていません。/fp init コマンドを使用して設定してください。", ephemeral=True)
-        return
+        if not result:
+            await interaction.response.send_message("デフォルトチャンネルが設定されていません。/fp init コマンドを使用して設定してください。", ephemeral=True)
+            return
 
-    channel_id = result[0]
-    channel = interaction.guild.get_channel(channel_id)
+        channel_id = result[0]
+        voice_channel = interaction.guild.get_channel(channel_id)
 
-    if not channel:
-        await interaction.response.send_message("デフォルトチャンネルが無効です。/fp init コマンドを使用して再設定してください。", ephemeral=True)
-        return
+        if not voice_channel:
+            await interaction.response.send_message("デフォルトチャンネルが無効です。/fp init コマンドを使用して再設定してください。", ephemeral=True)
+            return
 
-   # コマンドのレスポンスを送信
+    # コマンドのレスポンスを送信
     await interaction.response.send_message("イベントの作成を受付ました。", ephemeral=True)
 
     # イベントを作成
@@ -73,7 +84,7 @@ async def create_event(interaction: discord.Interaction, number_of_players: int 
         game_name=game_name,
         number_of_players=number_of_players,
         start_time_utc=start_time_utc,
-        channel=channel,
+        channel=voice_channel,
     )
     await view.update_message()
 

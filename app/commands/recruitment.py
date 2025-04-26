@@ -29,9 +29,11 @@ async def set_channel(interaction: discord.Interaction, channel: discord.VoiceCh
 @fp_group.command(name="create", description="ゲーム募集イベントを作成します。")
 @app_commands.describe(number_of_players="募集人数 (デフォルト: 5)", start_time="開始時間 (hh:mm形式、デフォルト: 平日: 21:00, 土日: 13:00)", game_name="募集するゲーム名 (デフォルト: VALORANT)", voice_channel="募集を行うボイスチャンネル (デフォルト: 設定済みのデフォルトチャンネル)")
 async def create_event(interaction: discord.Interaction, number_of_players: int = 5, start_time: str = None, game_name: str = "VALORANT", voice_channel: discord.VoiceChannel = None):
+    today = date.today()
+    tokyo_tz = timezone(timedelta(hours=9))
+    now_tokyo = datetime.now(tokyo_tz)
     # 曜日によるデフォルト値の設定
     if start_time is None:
-        today = date.today()
         if today.weekday() >= 5:  # 土日
             start_time = "13:00"
         else:  # 平日
@@ -41,8 +43,6 @@ async def create_event(interaction: discord.Interaction, number_of_players: int 
     try:
         start_time_obj = datetime.strptime(start_time, "%H:%M")
         # Asia/Tokyoのタイムゾーンを適用
-        tokyo_tz = timezone(timedelta(hours=9))
-        now_tokyo = datetime.now(tokyo_tz)
         start_time_utc = now_tokyo.replace(hour=start_time_obj.hour, minute=start_time_obj.minute, second=0, microsecond=0).astimezone(timezone.utc)
 
         # デフォルトの時間が指定され、現在時刻が指定時間以降の場合は30分後に設定

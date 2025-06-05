@@ -93,6 +93,6 @@ async def create_event(interaction: discord.Interaction, number_of_players: int 
     await view.update_message()
 
     # イベント情報をデータベースに保存
-    cursor.execute("INSERT INTO event_info (event_id, message_id, max_participants, recruitment_time, game_name) VALUES (?, ?, ?, ?, ?)",
-                   (view.event.id, view.message.id, number_of_players, start_time_utc, game_name))
+    cursor.execute("INSERT INTO event_info (event_id, message_id, max_participants, recruitment_time, game_name, available_count, unavailable_count) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                   (view.event.id, view.message.id, number_of_players, start_time_utc, game_name, len(view.yes_users), len(view.no_users)))
     conn.commit()

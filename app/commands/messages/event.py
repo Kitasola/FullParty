@@ -91,7 +91,7 @@ class EventResponseView(View):
                 except Exception as e:
                     print(f"Error updating event: {e}")
 
-    @discord.ui.button(label="YES", style=discord.ButtonStyle.green)
+    @discord.ui.button(label="YES", style=discord.ButtonStyle.success)
     async def yes_button(self, interaction: discord.Interaction, button: Button):
         await interaction.response.defer()  # 応答を遅延させる
         if interaction.user.id in self.no_users:
@@ -99,13 +99,33 @@ class EventResponseView(View):
         self.yes_users.add(interaction.user.id)
         await self.update_message()
         await self.check_attendance(interaction)
+        cursor.execute("UPDATE event_info SET available_count = ?, unavailable_count = ? WHERE message_id = ?", (len(self.yes_users), len(self.no_users), self.message.id))
+        conn.commit()
 
-    @discord.ui.button(label="NO", style=discord.ButtonStyle.red)
+    @discord.ui.button(label="NO", style=discord.ButtonStyle.danger)
     async def no_button(self, interaction: discord.Interaction, button: Button):
         await interaction.response.defer()  # 応答を遅延させる
         if interaction.user.id in self.yes_users:
             self.yes_users.remove(interaction.user.id)
         self.no_users.add(interaction.user.id)
         await self.update_message()
+        cursor.execute("UPDATE event_info SET available_count = ?, unavailable_count = ? WHERE message_id = ?", (len(self.yes_users), len(self.no_users), self.message.id))
+        conn.commit()
+
+    @discord.ui.button(label="CHECK", style=discord.ButtonStyle.secondary)
+    async def check_button(self, interaction: discord.Interaction, button: Button):
+        await interaction.response.defer()  # 応答を遅延させる
+        
+        # 募集人数と参加者数を取得
+        cursor.execute("SELECT max_participants, available_count, message_sent FROM event_info WHERE message_id = ?", (self.message.id,))
+        result = cursor.fetchone()
+        if not result:
+            print("イベント情報が見つかりませんでした。")
+            return
+        
+        max_participants, available_count, message_sent = result
+        num_last_user = max_participants - available_count
+        if num_last_user > 0 and not message_sent:
+            await interaction.followup.send(f"@{num_last_user}", ephemeral=False)
 
 __all__ = ["EventResponseView"]

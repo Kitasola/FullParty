@@ -6,14 +6,23 @@ from config import MAP_IMAGE_DIR
 from discord.ui import View, Button
 
 class MapResponseView(View):
-    def __init__(self, interaction: discord.Interaction):
+    def __init__(self, interaction: discord.Interaction, rank: int, rank_name: str):
         super().__init__(timeout=None)
         self.interaction = interaction
         self.message = None
+        self.rank = rank
+        self.rank_name = rank_name
 
     async def update_message(self):
         # データベースからマップ情報を取得
-        cursor.execute("SELECT map_name_en, map_name_jp, map_image_path FROM map_info")
+        sql = "SELECT map_name_en, map_name_jp, map_image_path FROM map_info"
+        # rankの値に応じてSQLクエリを変更
+        # ALL(-1): 全てのマップ, RANK(1): ランクマップのみ, NOT_RANK(0): ランクマップ以外
+        if self.rank == -1:
+            cursor.execute(sql)
+        else:
+            sql += " WHERE is_rank = ?"
+            cursor.execute(sql, (self.rank,))
         maps = cursor.fetchall()
 
         if not maps:
@@ -27,7 +36,7 @@ class MapResponseView(View):
         # マップ画像の保存先ディレクトリを使用してパスを構築
         map_image_path = os.path.join(MAP_IMAGE_DIR, map_image_path)
         # メッセージを送信
-        embed = discord.Embed(title="抽選結果", description=f"**{map_name_jp}** ({map_name_en})", color=0x3498db)
+        embed = discord.Embed(title=f"抽選結果({self.rank_name})", description=f"**{map_name_jp}** ({map_name_en})", color=0x3498db)
         if map_image_path:
             file = discord.File(map_image_path, filename="map.png")
             embed.set_image(url=f"attachment://map.png")

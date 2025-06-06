@@ -39,7 +39,8 @@ CREATE TABLE IF NOT EXISTS map_info (
     map_id INTEGER PRIMARY KEY AUTOINCREMENT,
     map_name_en TEXT NOT NULL,
     map_name_jp TEXT NOT NULL,
-    map_image_path TEXT
+    map_image_path TEXT,
+    is_rank BOOLEAN
 )
 """)
 
@@ -50,8 +51,8 @@ def initialize_map_info():
         cursor.execute("DELETE FROM map_info")  # 既存データを削除
         for row in reader:
             cursor.execute(
-                "INSERT INTO map_info (map_id, map_name_en, map_name_jp, map_image_path) VALUES (?, ?, ?, ?)",
-                (int(row[0]), row[1], row[2], row[3])
+                "INSERT INTO map_info (map_id, map_name_en, map_name_jp, map_image_path, is_rank) VALUES (?, ?, ?, ?, ?)",
+                (int(row[0]), row[1], row[2], row[3], bool(int(row[4])))
             )
         conn.commit()
 

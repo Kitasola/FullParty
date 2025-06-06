@@ -1,11 +1,12 @@
-1,Abyss,アビス,Abyss.webp
-2,Ascent,アセント,Ascent.webp
-3,Bind,バインド,Bind.webp
-4,Breeze,ブリーズ,Breeze.webp
-5,Fracture,フラクチャー,Fracture.webp
-6,Haven,ヘイブン,Haven.webp
-7,Icebox,アイスボックス,Icebox.webp
-8,Lotus,ロータス,Lotus.webp
-9,Pearl,パール,Pearl.webp
-10,Split,スプリット,Split.webp
-11,Sunset,サンセット,Sunset.webp
+map_id, map_name_en, map_name_jp, map_image_path, is_rank
+1,Abyss,アビス,Abyss.webp,0
+2,Ascent,アセント,Ascent.webp,1
+3,Bind,バインド,Bind.webp,0
+4,Breeze,ブリーズ,Breeze.webp,0
+5,Fracture,フラクチャー,Fracture.webp,0
+6,Haven,ヘイブン,Haven.webp,1
+7,Icebox,アイスボックス,Icebox.webp,1
+8,Lotus,ロータス,Lotus.webp,1
+9,Pearl,パール,Pearl.webp,1
+10,Split,スプリット,Split.webp,1
+11,Sunset,サンセット,Sunset.webp,1

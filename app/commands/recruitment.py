@@ -3,7 +3,7 @@ from discord import app_commands
 import discord
 # データベース操作用のモジュールをインポート
 from database import cursor, conn
-from datetime import datetime, timezone, timedelta, date
+from datetime import datetime, timezone, timedelta
 from discord.ui import View, Button
 from discord import Embed
 from .messages.event import EventResponseView
@@ -29,33 +29,35 @@ async def set_channel(interaction: discord.Interaction, channel: discord.VoiceCh
 @fp_group.command(name="create", description="ゲーム募集イベントを作成します。")
 @app_commands.describe(number_of_players="募集人数 (デフォルト: 5)", start_time="開始時間 (hh:mm形式、デフォルト: 平日: 21:00, 土日: 13:00)", game_name="募集するゲーム名 (デフォルト: VALORANT)", voice_channel="募集を行うボイスチャンネル (デフォルト: 設定済みのデフォルトチャンネル)")
 async def create_event(interaction: discord.Interaction, number_of_players: int = 5, start_time: str = None, game_name: str = "VALORANT", voice_channel: discord.VoiceChannel = None):
-    today = date.today()
+    # 基準(今日)となるdatetimeオブジェクトを取得
     tokyo_tz = timezone(timedelta(hours=9))
-    now_tokyo = datetime.now(tokyo_tz)
+    today = datetime.now(tokyo_tz)
+
     # 曜日によるデフォルト値の設定
     if start_time is None:
-        if today.weekday() >= 5:  # 土日
-            start_time = "13:00"
+        if today.weekday() >= 5 and today.hour < 13:  # 土日13:00以前
+            default_start_datetime = today.replace(hour=13, minute=0, second=0, microsecond=0)
         else:  # 平日
-            start_time = "21:00"
+            default_start_datetime = today.replace(hour=21, minute=0, second=0, microsecond=0)
 
     # 開始時間を検証
     try:
-        start_time_obj = datetime.strptime(start_time, "%H:%M")
-        # Asia/Tokyoのタイムゾーンを適用
-        start_time_utc = now_tokyo.replace(hour=start_time_obj.hour, minute=start_time_obj.minute, second=0, microsecond=0).astimezone(timezone.utc)
-
-        # デフォルトの時間が指定され、現在時刻が指定時間以降の場合は30分後に設定
-        if (start_time == "21:00" and now_tokyo.hour >= 21) or \
-            (today.weekday() >= 5 and start_time == "13:00" and now_tokyo.hour >= 13):
-            start_time_utc = (now_tokyo + timedelta(minutes=30)).replace(second=0, microsecond=0).astimezone(timezone.utc)
-
-        # 入力された時間が過去の場合
-        if start_time_utc < now_tokyo.astimezone(timezone.utc):
-            await interaction.response.send_message("開始時間が過去の時間です。未来の時間を指定してください。", ephemeral=True)
-            return
+        if start_time is None:
+            # デフォルトの時間が指定され、現在時刻が指定時間以降の場合は30分後に設定
+            if today >= default_start_datetime:
+                start_time_obj = (today + timedelta(minutes=30)).replace(second=0, microsecond=0)
+            else:
+                start_time_obj = default_start_datetime
+        else:
+            start_datetime_obj = datetime.strptime(start_time, "%H:%M")
+            start_time_obj = today.replace(hour=start_datetime_obj.hour, minute=start_datetime_obj.minute)
     except ValueError:
         await interaction.response.send_message("開始時間の形式が正しくありません。hh:mm形式で入力してください (例: 21:00)。", ephemeral=True)
+        return
+
+    # 入力された時間が過去の場合
+    if start_time_obj < today:
+        await interaction.response.send_message("開始時間が過去の時間です。未来の時間を指定してください。", ephemeral=True)
         return
 
     # ボイスチャンネルのチェック
@@ -83,7 +85,7 @@ async def create_event(interaction: discord.Interaction, number_of_players: int 
         interaction=interaction,
         game_name=game_name,
         number_of_players=number_of_players,
-        start_time_utc=start_time_utc,
+        start_time_utc=start_time_obj.astimezone(timezone.utc),
         channel=voice_channel,
     )
     await view.update_message()
@@ -94,5 +96,5 @@ async def create_event(interaction: discord.Interaction, number_of_players: int 
 
     # イベント情報をデータベースに保存
     cursor.execute("INSERT INTO event_info (event_id, message_id, max_participants, recruitment_time, game_name, available_count, unavailable_count) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                   (view.event.id, view.message.id, number_of_players, start_time_utc, game_name, len(view.yes_users), len(view.no_users)))
+                   (view.event.id, view.message.id, number_of_players, start_time_obj.astimezone(timezone.utc), game_name, len(view.yes_users), len(view.no_users)))
     conn.commit()

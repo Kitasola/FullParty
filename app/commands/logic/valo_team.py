@@ -1,7 +1,7 @@
 from database import cursor, conn
 from pulp import LpProblem, LpVariable, lpSum
 
-valo_rank = {
+VALO_RANK = {
     "Iron": 0,
     "Bronze": 1,
     "Silver": 2,
@@ -13,13 +13,13 @@ valo_rank = {
     "Radiant": 8,
 }
 
-valo_div = {
+VALO_DIV = {
     "1": 0,
     "2": 1,
     "3": 2,
 }
 
-valo_team_size = 5  # チームのサイズ
+VALO_TEAM_SIZE = 5  # チームのサイズ
 
 async def create(guild_id: int, users: list, team_num: int) -> dict:
     # ユーザー情報の取得
@@ -34,11 +34,11 @@ async def create(guild_id: int, users: list, team_num: int) -> dict:
     rank_score_users = dict()
     for user in result:
         user_id, rank, div = user
-        if rank not in valo_rank:
+        if rank not in VALO_RANK:
             raise ValueError(f"Invalid rank '{rank}' for user {user_id}.")
-        if str(div) not in valo_div:
+        if str(div) not in VALO_DIV:
             raise ValueError(f"Invalid div '{div}' for user {user_id}.")
-        rank_score_users[user_id] = valo_rank[rank] * len(valo_div) + valo_div[str(div)]
+        rank_score_users[user_id] = VALO_RANK[rank] * len(VALO_DIV) + VALO_DIV[str(div)]
     print(f"Rank scores: {rank_score_users}")
     
     # チーム分け
@@ -50,7 +50,6 @@ async def create(guild_id: int, users: list, team_num: int) -> dict:
     users = list(rank_score_users.keys())
     ### 各ユーザのチーム所属状況
     team_members = LpVariable.dicts("Team", (users, range(team_num)), cat="Binary")
-    print(f"Team members variables: {team_members}")
 
     ## 目的関数の設定
     ### チームのランクスコアの差を最小化
@@ -69,7 +68,7 @@ async def create(guild_id: int, users: list, team_num: int) -> dict:
     ## 制約条件の設定
     ### チームのサイズは5人
     for i in range(team_num):
-        problem += (lpSum([team_members[user_id][i] for user_id in users]) == valo_team_size), f"TeamSize_{i}"
+        problem += (lpSum([team_members[user_id][i] for user_id in users]) == VALO_TEAM_SIZE), f"TeamSize_{i}"
 
 
     ### 各ユーザは最大1つのチームに所属

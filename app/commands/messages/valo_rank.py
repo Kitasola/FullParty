@@ -17,7 +17,11 @@ class RankDivSelectView(View):
     )
     async def rank_select(self, interaction: discord.Interaction, select: discord.ui.Select):
         self.rank = select.values[0]
-        await interaction.response.defer()
+        if self.rank == "Radiant":
+            self.div = "1"
+            await interaction.response.send_message(f"{self.rank} を選択しました。divの選択は必要ありません。", ephemeral=True)
+        else:
+            await interaction.response.defer()
 
     @discord.ui.select(
         placeholder="Divを選択してください",
@@ -26,4 +30,8 @@ class RankDivSelectView(View):
     )
     async def div_select(self, interaction: discord.Interaction, select: discord.ui.Select):
         self.div = select.values[0]
-        await interaction.response.send_message(f"{self.rank} {self.div} を選択しました。", ephemeral=True)
+        if self.rank == "Radiant":
+            self.div = "1"
+            await interaction.response.send_message(f"{self.rank} を選択しました。", ephemeral=True)
+        else:
+            await interaction.response.send_message(f"{self.rank} {self.div} を選択しました。", ephemeral=True)

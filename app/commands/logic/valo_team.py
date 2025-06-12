@@ -19,7 +19,7 @@ VALO_DIV = {
     "3": 2,
 }
 
-VALO_TEAM_SIZE = 5  # チームのサイズ
+VALO_TEAM_SIZE = 2  # チームのサイズ
 
 async def create(guild_id: int, users: list, team_num: int) -> dict:
     # ユーザー情報の取得
@@ -60,10 +60,12 @@ async def create(guild_id: int, users: list, team_num: int) -> dict:
     ]
 
     # 絶対値最小化のための補助変数zを導入
-    z = LpVariable("z", lowBound=0)
-    problem += z, "MinimizeRankDifference"
-    problem += team_scores[0] - team_scores[1] <= z
-    problem += team_scores[1] - team_scores[0] <= z
+    z_max = LpVariable("z_max", lowBound=0)
+    z_min = LpVariable("z_min", lowBound=0)
+    problem += z_max - z_min, "MinimizeRankDifference"
+    for i in range(team_num):
+        problem += team_scores[i] <= z_max
+        problem += team_scores[i] >= z_min
 
     ## 制約条件の設定
     ### チームのサイズは5人
@@ -77,8 +79,8 @@ async def create(guild_id: int, users: list, team_num: int) -> dict:
     problem.solve()
 
     return {
-        "team1": [user_id for user_id in users if team_members[user_id][0].varValue == 1],
-        "team2": [user_id for user_id in users if team_members[user_id][1].varValue == 1]
+        f"team{i+1}": [user_id for user_id in users if team_members[user_id][i].varValue == 1]
+        for i in range(team_num)
     }
 
 __all__ = ["create"]

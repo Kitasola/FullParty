@@ -40,7 +40,7 @@ class RankDivSelectView(View):
         await interaction.response.defer()
         self.div = select.values[0]
 
-    @discord.ui.button(label="登録", style=discord.ButtonStyle.primary)
+    @discord.ui.button(label="REG", style=discord.ButtonStyle.primary)
     async def register_button(self, interaction: discord.Interaction, button: discord.ui.Button):
         # ユーザーがRankとDivを選択しているか確認
         if self.rank is None or self.div is None:

@@ -78,19 +78,23 @@ async def apply_rank(interaction: discord.Interaction):
 # チーム分けコマンド
 @valo_group.command(name="team", description="チーム分けを行います")
 async def create_team(interaction: discord.Interaction):
-    # ユーザーのIDを取得
+    # ユーザー情報の取得
     from database import cursor, conn
-    cursor.execute("SELECT user_id FROM user_info WHERE guild_id = ?", (interaction.guild.id,))
-    users = [row[0] for row in cursor.fetchall()]
-    if len(users) < 10:
-        await interaction.response.send_message("チーム分けには最低10人のユーザーが必要です。", ephemeral=True)
+    cursor.execute("SELECT user_id, rank, div FROM user_info WHERE guild_id = ?", (interaction.guild.id,))
+    result = cursor.fetchall()
+    if not result:
+        await interaction.response.send_message("チーム分けに必要なユーザー情報がありません。", ephemeral=True)
         return
+    
     try:
-        team = await valo_team_create(interaction.guild.id, users, 2)
+        team = await valo_team_create(result)
         team1 = ", ".join(str(user_id) for user_id in team["team1"])
         team2 = ", ".join(str(user_id) for user_id in team["team2"])
         await interaction.response.send_message(f"チーム1: {team1}\nチーム2: {team2}")
-    except Exception as e:
+    except ValueError as e:
         await interaction.response.send_message(f"チーム分けに失敗しました: {str(e)}", ephemeral=True)
+    except Exception as e:
+        await interaction.response.send_message(f"予期しないエラーが発生しました", ephemeral=True)
+        print(f"Error in create_team: {str(e)}")
 
 __all__ = ["valo_group"]

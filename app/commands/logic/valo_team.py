@@ -1,4 +1,3 @@
-from database import cursor, conn
 from pulp import LpProblem, LpVariable, lpSum
 
 VALO_RANK = {
@@ -19,21 +18,23 @@ VALO_DIV = {
     "3": 2,
 }
 
-VALO_TEAM_SIZE = 2  # チームのサイズ
+VALO_TEAM_SIZE = 5  # チームのサイズ
 
-async def create(guild_id: int, users: list, team_num: int) -> dict:
-    # ユーザー情報の取得
-    placeholders = ','.join(['?'] * len(users))
-    sql = f"SELECT user_id, rank, div FROM user_info WHERE guild_id = ? AND user_id IN ({placeholders})"
-    cursor.execute(sql, (guild_id, *users))
-    result = cursor.fetchall()
-    if not result:
-        raise ValueError("No users found in the database.")
+async def create(user_info: list, team_num: int = 2) -> dict:
+    # ユーザー情報の検証
+    if not isinstance(user_info, list) or not all(isinstance(info, tuple) and len(info) == 3 for info in user_info):
+        raise TypeError("user_infoは(user_id, rank, div)のタプルからなるリストである必要があります。")
+    if not isinstance(team_num, int) or team_num <= 0:
+        raise TypeError("team_numは正の整数である必要があります。")
+    if team_num < 2:
+        raise ValueError("チーム数は2以上である必要があります。")
+    if len(user_info) < team_num * VALO_TEAM_SIZE:
+        raise ValueError(f"ユーザー数が不足しています。必要: {team_num * VALO_TEAM_SIZE}人, 現在: {len(user_info)}人")
     
     # ランク情報を数値に変換
     rank_score_users = dict()
-    for user in result:
-        user_id, rank, div = user
+    for info in user_info:
+        user_id, rank, div = info
         if rank not in VALO_RANK:
             raise ValueError(f"Invalid rank '{rank}' for user {user_id}.")
         if str(div) not in VALO_DIV:

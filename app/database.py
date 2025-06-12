@@ -44,6 +44,16 @@ CREATE TABLE IF NOT EXISTS map_info (
 )
 """)
 
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS user_info (
+    guild_id INTEGER NOT NULL,
+    user_id INTEGER NOT NULL,
+    rank TEXT NOT NULL,
+    div INTEGER NOT NULL,
+    PRIMARY KEY (guild_id, user_id)
+)
+""")
+
 def initialize_map_info():
     with open(MAP_INFO_CSV, 'r', encoding='utf-8') as csvfile:
         reader = csv.reader(csvfile)

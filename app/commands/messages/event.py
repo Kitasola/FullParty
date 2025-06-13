@@ -38,8 +38,8 @@ class EventResponseView(View):
         embed.add_field(name=":loud_sound:VC", value=self.channel.mention, inline=True)
         embed.add_field(name="参加者リスト", value="", inline=False)
         # 参加者リストを更新
-        embed.add_field(name=":thumbsup: YES", value="\n".join(f"<@{user_id}>" for user_id in self.yes_users) or "なし", inline=False)
-        embed.add_field(name=":thumbsdown: NO", value="\n".join(f"<@{user_id}>" for user_id in self.no_users) or "なし", inline=False)
+        embed.add_field(name=f":thumbsup: YES ({len(self.yes_users)}人)", value="\n".join(f"<@{user_id}>" for user_id in self.yes_users) or "なし", inline=False)
+        embed.add_field(name=f":thumbsdown: NO ({len(self.no_users)}人)", value="\n".join(f"<@{user_id}>" for user_id in self.no_users) or "なし", inline=False)
         embed.set_footer(text="ボタンをクリックして参加状況を更新してください。")
 
         if not self.message:

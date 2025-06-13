@@ -1,6 +1,8 @@
 from discord import app_commands
 import discord
 from .messages.map import MapResponseView
+from .messages.valo_rank import RankDivSelectView
+from .messages.valo_team import TeamResponseView
 
 # VALORANT関連のコマンドグループを作成
 valo_group = app_commands.Group(name="valo", description="VALORANT関連のコマンド")
@@ -29,5 +31,19 @@ async def random_map(
             rank_name = "ALL"
     view = MapResponseView(interaction, int(rank), rank_name)
     await view.update_message()
+
+# ランク入力コマンド
+@valo_group.command(name="rank", description="ランクを登録します")
+async def apply_rank(interaction: discord.Interaction):
+    await interaction.response.defer()
+    view = RankDivSelectView(interaction)
+    await view.send_message()
+
+# チーム分けコマンド
+@valo_group.command(name="team", description="チーム分けを行います")
+async def create_team(interaction: discord.Interaction):
+    view = TeamResponseView(interaction)
+    await view.update_message()
+    await interaction.response.send_message("チーム分けを開始しました。", ephemeral=True)
 
 __all__ = ["valo_group"]

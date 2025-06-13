@@ -35,6 +35,7 @@ async def random_map(
 # ランク入力コマンド
 @valo_group.command(name="rank", description="ランクを登録します")
 async def apply_rank(interaction: discord.Interaction):
+    await interaction.response.defer()
     view = RankDivSelectView(interaction)
     await view.send_message()
 

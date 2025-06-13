@@ -3,13 +3,17 @@ import discord
 from discord.ui import View
 from database import cursor
 from utils import VALO_RANK, VALO_DIV
+from typing import Callable, Optional, Awaitable
 
 class RankDivSelectView(View):
-    def __init__(self, interaction: discord.Interaction):
+    def __init__(self, 
+                 interaction: discord.Interaction,
+                 callback: Optional[Callable[..., Awaitable[None]]] = None):
         super().__init__()
         self.interaction = interaction
         self.rank = None
         self.div = None
+        self.callback = callback
 
     async def send_message(self):
         cursor.execute("SELECT rank, div FROM user_info WHERE guild_id = ? AND user_id = ?", (self.interaction.guild.id, self.interaction.user.id))
@@ -18,7 +22,8 @@ class RankDivSelectView(View):
             message = "現在のランク: 未登録"
         else:
             message = f"現在のランク: {result[0]} {result[1]}"
-        await self.interaction.response.send_message(content=message, view=self, ephemeral=True)
+        await self.interaction.followup.send(content=message, view=self, ephemeral=True)
+        return result is not None
 
     @discord.ui.select(
         placeholder="Rankを選択してください",
@@ -40,7 +45,7 @@ class RankDivSelectView(View):
         await interaction.response.defer()
         self.div = select.values[0]
 
-    @discord.ui.button(label="REG", style=discord.ButtonStyle.primary)
+    @discord.ui.button(label="REG", style=discord.ButtonStyle.primary, custom_id="register_button")
     async def register_button(self, interaction: discord.Interaction, button: discord.ui.Button):
         # ユーザーがRankとDivを選択しているか確認
         if self.rank is None or self.div is None:
@@ -57,4 +62,7 @@ class RankDivSelectView(View):
             (self.interaction.guild.id, self.interaction.user.id, self.rank, self.div)
         )
         cursor.connection.commit()
+
+        if self.callback:
+            await self.callback()
         await interaction.response.send_message(f"{self.rank} {self.div} で登録しました。", ephemeral=True)

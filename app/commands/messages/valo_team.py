@@ -2,6 +2,8 @@ import discord
 from database import cursor, conn
 from discord.ui import View, Button
 from logic import valo_team_create
+from .valo_rank import RankDivSelectView
+import asyncio
 
 class TeamResponseView(View):
     def __init__(self, interaction: discord.Interaction):
@@ -20,17 +22,24 @@ class TeamResponseView(View):
         if self.message is None:
             self.message = await self.interaction.channel.send(embed=embed, view=self)
         else:
-            await self.message.edit(embed=embed, view=self)
+            self.message = await self.message.edit(embed=embed, view=self)
         
     @discord.ui.button(label="YES", style=discord.ButtonStyle.success)
     async def yes_button(self, interaction: discord.Interaction, button: Button):
-        await interaction.response.defer()
-        if interaction.user.id in self.no_users:
-            self.no_users.remove(interaction.user.id)
-        self.yes_users.add(interaction.user.id)
-        await self.update_message()
-        cursor.execute("UPDATE event_info SET available_count = ?, unavailable_count = ? WHERE message_id = ?", (len(self.yes_users), len(self.no_users), self.message.id))
-        conn.commit()
+        await interaction.response.send_message("参加を受け付けました。\n次にランク情報の登録をしてください。\n※変更がない場合は入力不要です。", ephemeral=True)
+
+        # ランク情報のチェック
+        async def update_yes_users():
+            if interaction.user.id in self.yes_users:
+                self.yes_users.remove(interaction.user.id)
+            self.yes_users.add(interaction.user.id)
+            await self.update_message()
+
+        view = RankDivSelectView(interaction, update_yes_users)
+        is_rank_registered = await view.send_message()
+
+        if is_rank_registered:
+            await update_yes_users()
 
     @discord.ui.button(label="NO", style=discord.ButtonStyle.danger)
     async def no_button(self, interaction: discord.Interaction, button: Button):
@@ -39,8 +48,6 @@ class TeamResponseView(View):
             self.yes_users.remove(interaction.user.id)
         self.no_users.add(interaction.user.id)
         await self.update_message()
-        cursor.execute("UPDATE event_info SET available_count = ?, unavailable_count = ? WHERE message_id = ?", (len(self.yes_users), len(self.no_users), self.message.id))
-        conn.commit()
     
     @discord.ui.button(label="RUN", style=discord.ButtonStyle.primary)
     async def create_team_button(self, interaction: discord.Interaction, button: Button):

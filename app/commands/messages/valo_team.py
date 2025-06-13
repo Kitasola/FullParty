@@ -13,9 +13,9 @@ class TeamResponseView(View):
         self.message = None
 
     async def update_message(self):
-        embed = discord.Embed(title="チーム分け", description="参加者リスト", color=0x3498db)
-        embed.add_field(name=":thumbsup: YES", value="\n".join(f"<@{user_id}>" for user_id in self.yes_users) or "なし", inline=False)
-        embed.add_field(name=":thumbsdown: NO", value="\n".join(f"<@{user_id}>" for user_id in self.no_users) or "なし", inline=False)
+        embed = discord.Embed(title="チーム分け", description="参加者リスト", color=0x00ffff)
+        embed.add_field(name=f":thumbsup: YES ({len(self.yes_users)}人)", value="\n".join(f"<@{user_id}>" for user_id in self.yes_users) or "なし", inline=False)
+        embed.add_field(name=f":thumbsdown: NO ({len(self.no_users)}人)", value="\n".join(f"<@{user_id}>" for user_id in self.no_users) or "なし", inline=False)
         embed.set_footer(text="ボタンをクリックして参加状況を更新してください。")
         
         if self.message is None:
@@ -76,7 +76,7 @@ class TeamResponseView(View):
             team = await valo_team_create(result)
 
             # チーム分け結果の表示
-            embed = discord.Embed(title="チーム分け(結果)", description="オートバランス", color=0x3498db)
+            embed = discord.Embed(title="チーム分け(結果)", description="オートバランス", color=0x32cd32)
             embed.add_field(name=":crossed_swords: TEAM1", value="\n".join(f"<@{user_id}>" for user_id in team["team1"]), inline=False)
             embed.add_field(name=":shield: TEAM2", value="\n".join(f"<@{user_id}>" for user_id in team["team2"]), inline=False)
             await interaction.followup.send(embed=embed)

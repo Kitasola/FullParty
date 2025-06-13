@@ -16,10 +16,8 @@ async def create(user_info: list, team_num: int = 2) -> dict:
     rank_score_users = dict()
     for info in user_info:
         user_id, rank, div = info
-        if rank not in VALO_RANK:
-            raise ValueError(f"Invalid rank '{rank}' for user {user_id}.")
-        if str(div) not in VALO_DIV:
-            raise ValueError(f"Invalid div '{div}' for user {user_id}.")
+        if rank not in VALO_RANK or str(div) not in VALO_DIV:
+            raise ValueError(f"<@{user_id}>不正なランク: '{rank}' '{div}'")
         rank_score_users[user_id] = VALO_RANK[rank] * len(VALO_DIV) + VALO_DIV[str(div)]
     print(f"Rank scores: {rank_score_users}")
     

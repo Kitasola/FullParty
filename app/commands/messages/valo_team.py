@@ -3,7 +3,6 @@ from database import cursor, conn
 from discord.ui import View, Button
 from logic import valo_team_create
 from .valo_rank import RankDivSelectView
-import asyncio
 
 class TeamResponseView(View):
     def __init__(self, interaction: discord.Interaction):
@@ -52,18 +51,35 @@ class TeamResponseView(View):
     @discord.ui.button(label="RUN", style=discord.ButtonStyle.primary)
     async def create_team_button(self, interaction: discord.Interaction, button: Button):
         await interaction.response.defer()
+        # 参加人数の確認
+        if len(self.yes_users) < 10:
+            await interaction.followup.send("チーム分けには10人以上の参加者が必要です。", ephemeral=True)
+            return
+
         # ユーザー情報の取得
-        cursor.execute("SELECT user_id, rank, div FROM user_info WHERE guild_id = ?", (self.interaction.guild.id,))
+        placeholders = ",".join(["?"] * len(self.yes_users))
+        sql = f"SELECT user_id, rank, div FROM user_info WHERE guild_id = ? AND user_id IN ({placeholders})"
+        cursor.execute(sql, (self.interaction.guild.id, *self.yes_users))
         result = cursor.fetchall()
         if not result:
             await interaction.followup.send("チーム分けに必要なユーザー情報がありません。", ephemeral=True)
             return
         
+        # ランク情報未登録のユーザーをチェック
+        unregistered_users = set(self.yes_users) - {user[0] for user in result}
+        if unregistered_users:
+            await interaction.followup.send(f"ランク情報が未登録のユーザー: {', '.join(f'<@{user_id}>' for user_id in unregistered_users)}", ephemeral=True)
+            return
+
         try:
+            # チーム分けの実行
             team = await valo_team_create(result)
-            team1 = ", ".join(str(user_id) for user_id in team["team1"])
-            team2 = ", ".join(str(user_id) for user_id in team["team2"])
-            await interaction.followup.send(f"チーム1: {team1}\nチーム2: {team2}")
+
+            # チーム分け結果の表示
+            embed = discord.Embed(title="チーム分け(結果)", description="オートバランス", color=0x3498db)
+            embed.add_field(name=":crossed_swords: TEAM1", value="\n".join(f"<@{user_id}>" for user_id in team["team1"]), inline=False)
+            embed.add_field(name=":shield: TEAM2", value="\n".join(f"<@{user_id}>" for user_id in team["team2"]), inline=False)
+            await interaction.followup.send(embed=embed)
         except ValueError as e:
             await interaction.followup.send(f"チーム分けに失敗しました: {str(e)}", ephemeral=True)
         except Exception as e:

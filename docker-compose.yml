@@ -14,3 +14,13 @@ services:
         limits:
           memory: 512M
           cpus: '0.5'
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.fullparty-rtr.rule=Host(`hokusai.xvps.jp`) && PathPrefix(`/fullparty`) # you might want to add: && Host(`your.domain.name`)"
+      - traefik.http.services.fullparty-svc.loadbalancer.server.port=8080
+    networks:
+      - traefik-public
+
+networks:
+  traefik-public:
+    external: true
